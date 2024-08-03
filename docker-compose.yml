@@ -1,0 +1,57 @@
+name: project0Docker
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mern-network
+    ports: 
+      - 27017:27017 #dont expose on Live , referance through .env
+
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    restart: unless-stopped
+    container_name: node-api
+    env_file: ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - mern-network
+    ports:
+      - 3001:3001
+    depends_on:
+      - mongo  
+
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: dockerfile
+    restart: unless-stopped
+    container_name: react-ui
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - mern-network
+    ports:
+      - 3000:3000
+    command: npm start dev
+    depends_on:
+      - backend
+    
+    
+
+    
+volumes:
+  mongo_data:
+networks:
+  mern-network:
+    driver: bridge
